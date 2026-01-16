@@ -1,0 +1,13 @@
+python-dotenv
+pyTelegramBotAPI
+google-genai
+groq
+flask
+ngrok
+langchain_community
+langchain_text_splitters
+langchain_chroma
+langchain_huggingface
+langchain_google_genai
+langchain_groq
+
