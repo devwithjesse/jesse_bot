@@ -10,4 +10,4 @@ langchain_chroma
 langchain_huggingface
 langchain_google_genai
 langchain_groq
-
+gunicorn --workers 2 --bind 0.0.0.0:$PORT webhook:app
