@@ -21,7 +21,9 @@ def webhook():
 
 # Helper to configure Telegram to use this endpoint
 def setup_webhook():
-    if RENDER_URL:
+    base_url = os.environ.get("RENDER_EXTERNAL_URL", "").rstrip("/")
+
+    if base_url:
         webhook_url = f"{RENDER_URL}/webhook"
         bot.remove_webhook() # Clear old settings
         bot.set_webhook(url=webhook_url)
