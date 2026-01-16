@@ -7,6 +7,7 @@ from src.config import PORT
 from src.webhook import webhook_bp, setup_webhook
 from src.pipelines.build_index import build_index
 
+handlers
 logger = setup_logger()
 
 app = Flask(__name__)
@@ -18,7 +19,7 @@ def health():
 
 with app.app_context():
     setup_webhook()
-    
+
 if __name__ == "__main__":
     try:
         logger.info("Starting knowledge base indexing...")
