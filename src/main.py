@@ -4,7 +4,7 @@ from src.telegram.bot import bot
 from src.telegram import handlers  
 from src.utils.logger import setup_logger
 from src.config import PORT
-from src.webhook import webhook_bp
+from src.webhook import webhook_bp, setup_webhook
 from src.pipelines.build_index import build_index
 
 logger = setup_logger()
@@ -16,6 +16,9 @@ app.register_blueprint(webhook_bp)
 def health():
     return "JesseBot is online and healthy.", 200
 
+with app.app_context():
+    setup_webhook()
+    
 if __name__ == "__main__":
     try:
         logger.info("Starting knowledge base indexing...")

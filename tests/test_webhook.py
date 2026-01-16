@@ -1,11 +1,11 @@
 import unittest
 import requests
 from src.utils.logger import setup_logger
-from src.config import TELEGRAM_BOT_API_TOKEN, TELEGRAM_CHAT_ID
+from src.config import TELEGRAM_BOT_API_TOKEN, TELEGRAM_CHAT_ID, NGROK_TEST_URL
 
 logger = setup_logger("test_webhook")
 
-ngrok_url = "https://scarcest-fosteringly-phuong.ngrok-free.dev" # Replace with your actual ngrok URL
+ngrok_url = NGROK_TEST_URL # Replace with your actual ngrok URL
 webhook_url = f"{ngrok_url}/webhook"
 
 class TestWebhook(unittest.TestCase):
