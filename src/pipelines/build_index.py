@@ -37,3 +37,6 @@ def build_index():
     embed_text(chunks=chunks, ids=ids, metadatas=metadatas)
 
     print("Database sync complete")
+
+if __name__ == "__main__":
+    build_index()

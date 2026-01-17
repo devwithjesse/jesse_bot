@@ -5,9 +5,10 @@ from src.telegram import handlers
 from src.utils.logger import setup_logger
 from src.config import PORT
 from src.webhook import webhook_bp, setup_webhook
-from src.pipelines.build_index import build_index
 
+# Ensure handlers are imported to register them
 handlers
+
 logger = setup_logger()
 
 app = Flask(__name__)
@@ -21,12 +22,5 @@ with app.app_context():
     setup_webhook()
 
 if __name__ == "__main__":
-    try:
-        logger.info("Starting knowledge base indexing...")
-        build_index()
-        logger.info("Indexing complete. Bot is ready.")
-    except Exception as e:
-        logger.error(f"Failed to index knowledge base: {e}")
-
     logger.info(f"Starting Flask app for webhook on port {PORT}...")
     app.run(host='0.0.0.0', port=PORT)

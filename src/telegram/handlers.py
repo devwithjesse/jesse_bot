@@ -1,92 +1,87 @@
-import os, random
+import os
+from random import choice
 from src.telegram.bot import bot
 from src.rag.llm import query_llm
 from src.utils.logger import setup_logger
 
 logger = setup_logger()
-PHOTO_PATH = "assets/image{}.jpg"
+PHOTO_DIR = "assets/" 
 
-# /start - Start the bot
+def safe_text(text: str) -> str:
+    return text.encode('utf-8', errors='ignore').decode('utf-8')
+
+# Handlers
 @bot.message_handler(commands=['start', 'help'])
 def start_message(message):
-    bot.reply_to(message, "Hello! I'm jmoksbot. I was built to answer questions about Jesse. Type /chat or /ask to start chatting!")
+    bot.reply_to(message, "👋 Hello! I'm **JesseBot**. I'm here to answer anything about Jesse Mokolo.\n\nType /chat to start, or /info to learn more about me!", parse_mode='Markdown')
 
-# /chat - Start chatting with JesseBot
 @bot.message_handler(commands=['chat', 'ask'])
-def chat(message):
-    bot.reply_to(message, "Chat mode activated! What would you like to know?")
+def chat_command(message):
+    bot.reply_to(message, "💬 **Chat mode activated!**\nAsk me anything about Jesse (or type 'exit' to stop).", parse_mode='Markdown')
     bot.register_next_step_handler(message, process_chat)
 
 def process_chat(message):
-    def safe_text(text: str) -> str:
-        return text.encode('utf-8', errors='ignore').decode('utf-8')
-
     try:
         user_message = message.text
+        if not user_message: return
 
-        # If user wants to exit chat mode
+        # Exit conditions
         if user_message.lower() in ["stop", "/stop", "exit", "quit"]:
-            bot.reply_to(message, "Chat mode exited.")
+            bot.reply_to(message, "👋 Chat mode exited. See you later!")
             return
 
-        # RAG Pipeline begins
+        # Show 'typing' action so user knows LLM is working
+        bot.send_chat_action(message.chat.id, 'typing')
+
+        # RAG Pipeline
         answer = query_llm(user_message)
-        safe_answer = safe_text(answer)
+        bot.send_message(message.chat.id, safe_text(answer))
 
-        bot.send_message(message.chat.id, safe_answer)
-
-        logger.info(f"User: {user_message} -> Bot: {safe_answer}")
+        logger.info(f"User: {user_message} -> Bot Success")
         
-        # Wait for the next message again
+        # Loop back to keep the conversation going
         bot.register_next_step_handler(message, process_chat)
 
     except Exception as e:
-        logger.exception("Error processing chat message: %s", str(e))
-        bot.reply_to(message, "Sorry, something went wrong while processing your request.")
+        logger.exception("Error in process_chat")
+        bot.reply_to(message, "⚠️ My brain stalled for a second. Try asking again!")
 
-# /info - About JesseBot
-@bot.message_handler(commands=['info', 'about'])
-def send_about_info(message):
-    about_text = (
-        "🤖 **JesseBot v1.0**\n"
-        "I am an AI assistant built to represent Jesse Mokolo.\n\n"
-        "📍 **Background:** Software Engineer (Babcock University '26).\n"
-        "💻 **Expertise:** AI, Python, Web/Backend.\n"
-        "🎓 **Status:** First Class honors student.\n\n"
-        "Use /chat to ask me anything specific about Jesse's life or career!"
-    )
-    bot.reply_to(message, about_text, parse_mode='Markdown')
-
-# /reset - Reset the chat context
-def reset_handler(message):
-    bot.clear_step_handler_by_chat_id(chat_id=message.chat.id)
-    bot.reply_to(message, "🔄 Conversation state has been reset. You are now in the main menu. Type /chat to start again.")
-
-# /me - Return image of Jesse
 @bot.message_handler(commands=['me'])
 def send_jesse_photo(message):
     try:
-        if not os.path.exists(PHOTO_PATH):
-            bot.reply_to(message, "❌ I couldn't find Jesse's photo in my database!")
+        # 1. Check if directory exists
+        if not os.path.exists(PHOTO_DIR) or not os.listdir(PHOTO_DIR):
+            bot.reply_to(message, "❌ No photos found in the assets folder!")
             return
-        
+
+        # 2. Pick a random file and create the FULL path
+        random_file = choice(os.listdir(PHOTO_DIR))
+        full_path = os.path.join(PHOTO_DIR, random_file)
+
         bot.send_chat_action(message.chat.id, 'upload_photo')
 
-        with open(PHOTO_PATH.format(str(random.choice([1, 2, 3]))), 'rb') as photo:
+        with open(full_path, 'rb') as photo:
             bot.send_photo(
                 message.chat.id,
                 photo,
-                caption="Surpriseee. Jesse has always looked stunning, hasn't he! 📸",
+                caption="Surpriseee! Jesse has always looked stunning, hasn't he? 📸"
             )
-        
-        logger.info(f"Sent photo to user {message.chat.id}")
+        logger.info(f"Sent photo: {full_path}")
     
     except Exception as e:
-        logger.error(f"Error sending photo: {e}")
-        bot.reply_to(message, "⚠️ Sorry, I had trouble finding my camera!")
+        logger.error(f"Photo error: {e}")
+        bot.reply_to(message, "⚠️ I tried to take a photo, but the lens cap was on!")
 
-    
-# Simple echo handler
+@bot.message_handler(commands=['db_status'])
+def check_db(message):
+    try:
+        from src.rag.vectorstore import get_vectorstore
+        vs = get_vectorstore()
+        count = vs._collection.count() 
+        bot.reply_to(message, f"📊 **Database Status**\nChunks indexed: `{count}`", parse_mode='Markdown')
+    except Exception as e:
+        bot.reply_to(message, f"❌ DB Error: {str(e)}")
+
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
-    bot.reply_to(message, f"You said: {message.text}. Type /chat to start a conversation with me about Jesse.")
+    bot.reply_to(message, "I only answer specific questions in **Chat Mode**. Type /chat to begin!")
