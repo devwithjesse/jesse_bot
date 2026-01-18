@@ -1,4 +1,5 @@
 # 🤖 JesseBot: Personal RAG-Powered Telegram Assistant
+## Try it out at [JesseBot](https://t.me/jmoksbot)
 
 **JesseBot** is a high-performance Retrieval-Augmented Generation (RAG) chatbot designed to represent the identity, skills, and background of **Jesse Mokolo**. Built with a modular Python architecture, it uses semantic search to provide grounded, accurate answers about Jesse's life and career.
 
